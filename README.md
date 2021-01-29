@@ -257,8 +257,8 @@ sudo systemctl restart openhab2.service
 * Open a web browser, load openHAB dashboard and **Paper UI**.
 * From the menu on the left in **Paper UI** select **Add-ons**.
 * Click the **Bindings** tab.
-* Search for ** Linux Input Binding**
-* Click **INSTALL** and wait until ** Linux Input Binding** installs.
+* Search for **Linux Input Binding**
+* Click **INSTALL** and wait until **Linux Input Binding** installs.
 * From the menu on the left in **Paper UI** select **Configuration > Things**.
 * Click the button to add a new thing and select **Linux Input Binding**.
 * Select **RPI Wired Keyboard 1 (linuxinput:input-device:event0)**
@@ -271,7 +271,7 @@ For linked item
 &nbsp;&nbsp;&nbsp;&nbsp;- Type: String  
 
 
-**Note:** After installing and enabling ** Linux Input Binding** you can **not** use your keyboard for typing in the command-prompt because evdev will block it.
+**Note:** After installing and enabling **Linux Input Binding** you can **not** use your keyboard for typing in the command-prompt because evdev will block it.
 
 ## Rules
 

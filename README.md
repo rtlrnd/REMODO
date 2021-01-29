@@ -1,1 +1,301 @@
-# remodo
+# REMODO
+# Kodi
+
+Kodi is a free and open source media player that is designed to look great on big screen TV but is also fine a small screen. LibreELEC is GNU/Linux distribution for embedded devices that provides Kodi. It is perfect choice for Raspberry Pi. This chapter explains how to:
+
+* Install LibreELEC on Raspberry Pi 4
+* Common keyboard shortcuts in Kodi
+* Install TED Talks plugin
+* Configure custom keyboard shortcut to launch TED Talks plugin
+
+## Required Hardware
+
+The following hardware is required:
+
+* Raspberry Pi 4
+* USB keyboard (recommended Raspberry Pi official keyboard)
+* microSD card (recommended class 10, 16GB or more)
+* HDMI monitor with appropriate cable
+* Ethernet cable to connect Raspberry Pi to the LAN and the Internet
+
+## Install LibreELEC
+
+Follow the steps below to download and install LibreELEC with Kodi on Raspberry Pi 4:
+
+* [Download and flash LibreELEC for Raspberry Pi 4](https://libreelec.tv/raspberry-pi-4/) on microSD card
+* Connect HDMI monitor, a keyboard and ethernet cable (for internet connectivity) to Raspberry Pi 4. Plug the microSD card and after that turn on Raspberry Pi 4 by plugging in the power cable into the USB-C port.
+* Do the initial LibreELEC and Kodi setup following the on-screen instructions and enable **SSH** and **Samba**
+
+## Default Keyboard Shortcuts:
+
+The full list of default keyboard controls supported by Kodi are listed [here](https://kodi.wiki/view/Keyboard_controls).
+
+Most commonly used keyboard shortcuts are `space` to pause or play, `x` to stop, arrow keys to navigate through menus, `T` to turn on/off subtitles, `Ctrl + S` to make a screenshot.
+
+## Install TED plugin
+
+Follow the steps below to install [TED plugin](https://kodi.wiki/view/Add-on:TED_Talks):
+
+* From the left menu on the home screen select **Add-ons**.
+* From the left menu on the home screen select **Download**.
+* Select **Video Add-ons**.
+* Select **TED Talks**.
+* Click **Install**.
+
+## Configuring keyboard shortcut for TED plugin
+
+* Login via SSH (default user **root** and password **libreelec**) or Samba.
+* Create keyboard configuration file `/storage/.kodi/userdata/keymaps/keyboard.xml` with the following XML content to launch the TED plugin (if it is installed) when key D is pressed:
+```
+<keymap>
+<global>
+  <keyboard>
+       <d>RunAddon(plugin.video.ted.talks)</d>
+   </keyboard>
+  </global>
+</keymap>
+```
+* Reboot Raspberry Pi to load the new configurations, from the left menu on Kodi main screen select the button with icon for **Power Options** and click **Reboot**.
+* Press key D on the keyboard and verify that the previously installed TED plugin is started.
+
+# Home Assistant
+
+Home Assistant is an open source automation software for smart home. This chapter explains how to:
+* Install Home Assistant on Raspberry Pi 4
+* Configure IKEA TRÅDFRI integration in Home Assistant
+* Configure keyboard remote integration in Home Assistant
+* Create a rule to use a keyboard to control IKEA TRÅDFRI lightning bulb through Home Assistant
+
+## Required Hardware
+
+The following hardware is required:
+* Raspberry Pi 4
+* USB keyboard (recommended Raspberry Pi official keyboard)
+* microSD card (recommended class 10, 16GB or more)
+* HDMI monitor with appropriate cable
+* Ethernet cable to connect Raspberry Pi to the LAN and the Internet
+* IKEA TRÅDFRI Gateway
+* IKEA TRÅDFRI lightning bulb
+* Smartphone (Android or iOS) with installed and configured IKEA TRÅDFRI mobile application
+
+## Home Assistant Installation
+
+Follow the steps below to install Home Assistant on Raspberry Pi 4:
+* Download and extract [Home Assistant 32-bit image for your Raspberry Pi 4](https://www.home-assistant.io/hassio/installation/).
+* Using balenaEtcher write the image to a microSD card.
+* Connect keyboard, HDMI monitor and Ethernet cable for Internet connectivity to the Raspberry Pi. Plug the microSD card and turn on the Raspberry Pi 4 by inserting the USB C cable. Wait until the system boots. The initial boot will perform some Home Assistant installation steps that can take 20 minutes or more.
+* Open a web browser and access http://homeassistant.local:8123/ If mDNS is not working replace `homeassistant.local` with the actual IP of the Raspberry Pi in your LAN.
+
+## IKEA TRÅDFRI Integration in Home Assistant
+
+Follow the steps below to integrate IKEA TRÅDFRI in Home Assistant:
+
+* From the menu of the left go to **Configuration**
+* Select **Integrations**.
+* Click the plus button (from the lower right corner) and add seach for IKEA TRÅDFRI.
+* Enter IP address of the IKEA TRÅDFRI Gateway for **Host**
+* Enter security code from the back of the IKEA TRÅDFRI Gateway
+* Click **SUBMIT**
+* Home Assistant will automatically detect your IKEA TRÅDFRI devices, click **FINISH**.
+* From the menu of the left go to **Overview** and verify that the IKEA TRÅDFRI lightning bulb appears.
+
+For more details have a look [at this video tutorial](https://www.youtube.com/watch?v=nk1ohSIB75Q).
+
+## Keyboard Remote Integration in Home Assistant
+
+* Go to the user profile (in the menu the lower left corner) and **Enable Advanced Mode**.
+* From the menu of the left go to **Supervisor**
+* Click on tab **Add-on store**
+* Search for **File Editor** and click **Install**
+* After successful installation of **File Editor** click **Start** and after that click **Open Web UI**.
+* Click **Browse Filesystem** (the button with folder icon in the upper left corner of File Editor)
+* Select `/config/configuration.yam`
+* Add the following lines to the end of `/config/configuration.yaml` and save it:
+```
+keyboard_remote:
+- device_descriptor: '/dev/input/event0'
+  type: 'key_up'
+```
+* From the menu of the left go to **Configuration**
+* Select **Server Controls**
+* Click **CHECK CONFIGURATION**
+* Verify that message **Configuration valid!** is shown. Otherwise go back to the previous steps to check the content of `/config/configuration.yaml`.
+* From **Server management** click **RESTART** and wait until Home Assistant restarts
+
+**Note:** After enabling **Keyboard Remote** integration you can **not** use your keyboard for typing in the command-prompt because **Home Assistant** intercepts it and evdev will block it.
+
+### Troubleshooting
+
+To verify that the Keyboard Remote integration in Home Assistant is successful select **Developer tools** and click **EVENTS**. In **Listen to events** set `keyboard_remote_command_received` and subscribe. Press keys and observe the detected events to find out key codes. If event is not detected double check `/config/configuration.yaml`
+
+## Home Assistant Automations
+
+* From the menu on the left go to **Supervisor** and select **File Editor**
+* Click **Open Web UI**.
+* Click **Browse Filesystem** (the button with folder icon in the upper left corner of File Editor)
+* Select `/config/automations.yaml` and save it as:
+```
+- alias: turn on lights
+  trigger:
+    platform: event
+    event_type: keyboard_remote_command_received
+    event_data:
+      device_descriptor: "/dev/input/event0"
+      key_code: 30
+  action:
+    service: light.turn_on
+    entity_id: light.tradfri_bulb_7
+- alias: turn off lights
+  trigger:
+    platform: event
+    event_type: keyboard_remote_command_received
+    event_data:
+      device_descriptor: "/dev/input/event0"
+      key_code: 31
+  action:
+    service: light.turn_off
+    entity_id: light.tradfri_bulb_7
+```
+
+**NOTE:** You need to replace `light.tradfri_bulb_7` with the actual entity id of the IKEA TRÅDFRI lightning bulb! The keyboard device descriptor might be different from `/dev/input/event0` if several keyboards are connected.
+
+* From the menu of the left go to **Configuration**
+* Select **Server Controls**
+* Click **CHECK CONFIGURATION**
+* Verify that message **Configuration valid!** is shown. Otherwise go back to the previous steps to check the content of `/config/automations.yaml`.
+* From **Server management** click **RESTART** and wait until Home Assistant restarts
+* Verify that IKEA TRÅDFRI lightning bulb turns on when key A is pressed and turns off when key S is pressed.
+
+# OpenHAB
+
+OpenHAB is an open source automation software for smark home. The following chapter explains how to:
+* Install OpenHAB2 on Raspberry Pi 4
+* Configure Tradfri binding
+* Configure Linux Input binding
+* Create a rule to use a keyboard to control IKEA TRÅDFRI lightning bulb through OpenHAB2
+
+## Required Hardware
+
+The following hardware is required:
+* Raspberry Pi 4
+* USB keyboard (recommended Raspberry Pi official keyboard)
+* microSD card (recommended class 10, 16GB or more)
+* HDMI monitor with appropriate cable
+* Ethernet cable to connect Raspberry Pi to the LAN and the Internet
+* IKEA TRÅDFRI Gateway
+* IKEA TRÅDFRI lightning bulb
+* Smartphone (Android or iOS) with installed and configured IKEA Tradfri mobile application
+
+## OpenHAB Installation
+
+Follow the steps below to install OpenHAB on Raspberry Pi 4:
+
+* [Download openHABian](https://github.com/openhab/openhabian/releases), a GNU/Linux distribution for Raspberry Pi pre-configured with openHAB and available as image for microSD card. As of the moment, the recommended release is the latest stable openHABian v1.5 based on Debian Buster with Raspberry Pi 4 support.
+* Flash openHABian on a microSD card with [balenaEtcher](https://www.balena.io/etcher/).
+* Connect keyboard, HDMI monitor and Ethernet cable for Internet connectivity to the Raspberry Pi. Plug the microSD card and turn on the Raspberry Pi 4 by inserting the USB C cable. Wait until the system boots.
+* The openHAB dashboard can be reached from a web browser on any computer in the same local area network at http://openhab:8080 If you experience any issues with mDNS access it directly using the IP, just for example (replace `192.168.1.2` with the actual IP of the Raspberry Pi 4): http://192.168.1.2:8080/
+
+### Default Passwords
+* User password needed for SSH or sudo: "openhabian:openhabian"
+* openHAB remote console: "openhab:habopen"
+
+**NOTE:** This tutorial is based on **Paper UI** of **OpenHAB2**.
+
+## TRÅDFRI binding
+
+Follow the steps below to install the [TRÅDFRI Binding](https://www.openhab.org/addons/bindings/tradfri/):
+
+* Open a web browser and from the openHAB dashboard select **Paper UI**.
+* From the menu on the left in **Paper UI** select **Add-ons**.
+* Click the **Bindings** tab.
+* Search for **TRÅDFRI Binding**
+* Click **INSTALL** and wait until **TRÅDFRI Binding** installs.
+* From the menu on the left in **Paper UI** select **Inbox**.
+* Add **IKEA TRÅDFRI Gateway** as **thing**.
+* From the menu on the left select **Configurations > Things**.
+* Edit the TRÅDFRI gateway.
+* Enter security code which is printed on the back of the TRÅDFRI gateway.
+* Save the changes in the TRÅDFRI gateway configurations and verify openHAB detects it as **online**.
+* From the menu on the left go to Inbox and add a bulb as thing
+* From the menu on the left select **Configurations > Things**, click on the IKEA TRÅDFRI lightning bulb added on the previous step.
+* Click to Link channel and choose brightness from "Please select the item to link:".
+* From the menu on the left go to Control, verify that the IKEA TRÅDFRI lightning bulb is present and you can control it by changing the brightness as well as turning it on or off.
+
+For more details have a look [at this video tutorial](https://www.youtube.com/watch?v=OekzgjGrGVU).
+
+## Make BLUETOOTH connection between Remodo and Raspberry Pi
+Make sure the Remodo_X is unpaired 
+
+- OpenHAB command console - 
+    - See if target remodo is under advertising mode
+    scan on
+    - Connect target remodo 
+    connect <mac address>
+    - List of profile will be listed out if connected in success
+    - Try pressing the key on the remodo to test in command console 
+
+## Linux Input Binding
+
+[Linux Input Binding](https://www.openhab.org/addons/bindings/linuxinput/) allows to you use a keyboard to control your openHAB instance. It works only on Linux and uses libevdev to expose all keys on the keyboard as channels.
+
+Follow the steps below to install and configure the Linux Input Binding for OpenHAB2 on Raspberry Pi with openHABian:
+
+* Using the HDMI monitor and keyboard attached to the Raspberry Pi 4, login as user **openhabian** (default password is **openhabian**) in the Linux command-prompt (alternatively advanced user can also login through SSH).
+* Execute the following commands in command-prompt to install libevdev:
+```
+sudo apt update
+sudo apt install -y libevdev-dev
+```
+* Execute the following command to allow openhab to access keyboard events:
+```
+sudo usermod -a -G input openhab
+```
+* Execute the following command to restart OpenHAB2:
+```
+sudo systemctl restart openhab2.service
+```
+* Open a web browser, load openHAB dashboard and **Paper UI**.
+* From the menu on the left in **Paper UI** select **Add-ons**.
+* Click the **Bindings** tab.
+* Search for ** Linux Input Binding**
+* Click **INSTALL** and wait until ** Linux Input Binding** installs.
+* From the menu on the left in **Paper UI** select **Configuration > Things**.
+* Click the button to add a new thing and select **Linux Input Binding**.
+* Select **RPI Wired Keyboard 1 (linuxinput:input-device:event0)**
+* Enable it and verify that path is `/dev/input/event0`
+* Click the button to confirm and verify that **RPI Wired Keyboard 1** has been added as thing with status **online**.
+* Edit **RPI Wired Keyboard 1**, in section **Channels** scroll down to **Others** and click **Key Event**. Create a linked item.
+
+For linked item  
+&nbsp;&nbsp;&nbsp;&nbsp;- Name: <e.g. ANY_KEY>  
+&nbsp;&nbsp;&nbsp;&nbsp;- Type: String  
+
+
+**Note:** After installing and enabling ** Linux Input Binding** you can **not** use your keyboard for typing in the command-prompt because evdev will block it.
+
+## Rules
+
+Follow the steps below to enable rules in **Paper UI** of **openHAB2**:
+
+* From the menu on the left in **Paper UI** select **Add-ons**.
+* Click the **MISC** tab.
+* Select **Rule Engine (Experimental)** and click **INSTALL**.
+* After successful installation of **Rule Engine (Experimental)** refresh the web browser and verify **Rules** in the left menu of **Paper UI**.
+
+#### Create a rule to turn on lights
+
+Follow the steps below to create a rule that turns on the lights when key A on the keyboard is pressed:
+
+* From the menu on the left in **Paper UI** go to **Rules**, click the + icon and select **New rule**.
+* For **when** select **an item state changes**, for **item** select the linked key event, for state type in **KEY_A**.
+* For **then** select **send a command**, for **item** select the linked IKEA TRÅDFRI lightning bulb brightness, for **Command** select **ON**.
+* Verify that the IKEA TRÅDFRI lightning bulb turns on by pressing key A on the keyboard.
+
+#### Create a rule to turn off lights
+
+Follow the steps below to create a rule that turns off the lights when key S on the keyboard is pressed:
+
+* From the menu on the left in **Paper UI** go to **Rules**, click the + icon and select **New rule**.
+* For **when** select **an item state changes**, for **item** select the linked key event, for state type in **KEY_S**.
+* For **then** select **send a command**, for **item** select the linked IKEA TRÅDFRI lightning bulb brightness, for **Command** select **OFF**.
+* Verify that the IKEA TRÅDFRI lightning bulb turns off by pressing key S on the keyboard.

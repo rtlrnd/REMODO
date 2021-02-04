@@ -168,11 +168,11 @@ To verify that the Keyboard Remote integration in Home Assistant is successful s
 
 # OpenHAB
 
-OpenHAB is an open source automation software for smark home. The following chapter explains how to:
+OpenHAB is an open source automation software for smart home. The following chapter explains how to:
 * Install OpenHAB2 on Raspberry Pi 4
-* Configure Tradfri binding
+* Configure Philips Hue Light
 * Configure Linux Input binding
-* Create a rule to use a keyboard to control IKEA TRÅDFRI lightning bulb through OpenHAB2
+* Create a rule to use a keyboard to control Philips Hue lightning bulb through OpenHAB2
 
 ## Required Hardware
 
@@ -182,9 +182,9 @@ The following hardware is required:
 * microSD card (recommended class 10, 16GB or more)
 * HDMI monitor with appropriate cable
 * Ethernet cable to connect Raspberry Pi to the LAN and the Internet
-* IKEA TRÅDFRI Gateway
-* IKEA TRÅDFRI lightning bulb
-* Smartphone (Android or iOS) with installed and configured IKEA Tradfri mobile application
+* Philips Hue Bridge
+* Philips Hue White ambiance 
+* Smartphone (Android or iOS) with installed and configured "Philips Hue App" mobile application
 
 ## OpenHAB Installation
 
@@ -201,46 +201,41 @@ Follow the steps below to install OpenHAB on Raspberry Pi 4:
 
 **NOTE:** This tutorial is based on **Paper UI** of **OpenHAB2**.
 
-## TRÅDFRI binding
+## Connect REMODO X remote with your Raspberry pi with BLE connection
 
-Follow the steps below to install the [TRÅDFRI Binding](https://www.openhab.org/addons/bindings/tradfri/):
+* Before start connecting the Remodo X with Raspberry pi, please make sure batteries are correctly install in the battery compartment of the remodo X. You can see GREEN LED flashing after batteries are correctly installed.
 
-* Open a web browser and from the openHAB dashboard select **Paper UI**.
-* From the menu on the left in **Paper UI** select **Add-ons**.
-* Click the **Bindings** tab.
-* Search for **TRÅDFRI Binding**
-* Click **INSTALL** and wait until **TRÅDFRI Binding** installs.
-* From the menu on the left in **Paper UI** select **Inbox**.
-* Add **IKEA TRÅDFRI Gateway** as **thing**.
-* From the menu on the left select **Configurations > Things**.
-* Edit the TRÅDFRI gateway.
-* Enter security code which is printed on the back of the TRÅDFRI gateway.
-* Save the changes in the TRÅDFRI gateway configurations and verify openHAB detects it as **online**.
-* From the menu on the left go to Inbox and add a bulb as thing
-* From the menu on the left select **Configurations > Things**, click on the IKEA TRÅDFRI lightning bulb added on the previous step.
-* Click to Link channel and choose brightness from "Please select the item to link:".
-* From the menu on the left go to Control, verify that the IKEA TRÅDFRI lightning bulb is present and you can control it by changing the brightness as well as turning it on or off.
+* Execute the following commands in command-prompt
+* type **sudo bluetoothctl** then then press enter and input the administrator password
 
-For more details have a look [at this video tutorial](https://www.youtube.com/watch?v=OekzgjGrGVU).
+```
+sudo bluetoothctl
+```
 
-## Make BLUETOOTH connection between Remodo and Raspberry Pi
-Make sure the Remodo_X is unpaired 
+* type **agent on** and press enter.
+```
+agent on
+```
 
-- OpenHAB command console - 
-    - See if target remodo is under advertising mode
-    scan on
-    - Connect target remodo 
-    connect <mac address>
-    - List of profile will be listed out if connected in success
-    - Try pressing the key on the remodo to test in command console 
+* Press and hold the III and IV keys at the same time on the Remodo X remote until it beeps. The GREEN LED should be flashing.
+* Type **scan on** and press enter. 
+```
+scan on
+```
 
-## Linux Input Binding
+The unique addresses of all the Bluetooth devices around the Raspberry Pi will appear and look something like **Remodo_X_xxxxxx**. 
+* To pair the device, type pair [device mac address]. It should be like this, pair XX:XX:XX:XX:XX:XX 
+```
+pair 85:80:00:00:00:01
+```
+* Then, type connect XX:XX:XX:XX:XX:XX (the mac address you have paired in the previous step)
+```
+connect 85:80:00:00:00:01
+```
 
+## Install Linux Input Binding 
 [Linux Input Binding](https://www.openhab.org/addons/bindings/linuxinput/) allows to you use a keyboard to control your openHAB instance. It works only on Linux and uses libevdev to expose all keys on the keyboard as channels.
 
-Follow the steps below to install and configure the Linux Input Binding for OpenHAB2 on Raspberry Pi with openHABian:
-
-* Using the HDMI monitor and keyboard attached to the Raspberry Pi 4, login as user **openhabian** (default password is **openhabian**) in the Linux command-prompt (alternatively advanced user can also login through SSH).
 * Execute the following commands in command-prompt to install libevdev:
 ```
 sudo apt update
@@ -254,24 +249,39 @@ sudo usermod -a -G input openhab
 ```
 sudo systemctl restart openhab2.service
 ```
-* Open a web browser, load openHAB dashboard and **Paper UI**.
+
+* Open a web browser and from the openHAB dashboard select **Paper UI**.
 * From the menu on the left in **Paper UI** select **Add-ons**.
 * Click the **Bindings** tab.
 * Search for **Linux Input Binding**
 * Click **INSTALL** and wait until **Linux Input Binding** installs.
-* From the menu on the left in **Paper UI** select **Configuration > Things**.
-* Click the button to add a new thing and select **Linux Input Binding**.
-* Select **RPI Wired Keyboard 1 (linuxinput:input-device:event0)**
-* Enable it and verify that path is `/dev/input/event0`
-* Click the button to confirm and verify that **RPI Wired Keyboard 1** has been added as thing with status **online**.
-* Edit **RPI Wired Keyboard 1**, in section **Channels** scroll down to **Others** and click **Key Event**. Create a linked item.
+* From the menu on the left select **Configurations > Things**.
+* Click + button and then select LinuxInputBinding
+* Select Remodo_X_Keyboard and add as "things"
+* Enable the option of Configuration Parameters and click tick to save the modification and verify that path is `/dev/input/event0`
+* Click the button to confirm and verify that **Remodo_X_Keyboard** has been added as thing with status **online**.
+* Edit **Configuration > Things > Remodo_X_Keyboard**, in section **Channels** scroll down to **Others** and click **Key Event**. Create a linked item.
+* Create a new Item name it **ANY_KEY** with **String** type 
 
 For linked item  
 &nbsp;&nbsp;&nbsp;&nbsp;- Name: <e.g. ANY_KEY>  
 &nbsp;&nbsp;&nbsp;&nbsp;- Type: String  
 
-
 **Note:** After installing and enabling **Linux Input Binding** you can **not** use your keyboard for typing in the command-prompt because evdev will block it.
+
+
+## Philips Hue binding
+Follow the steps below to install the [hue Binding](https://www.openhab.org/addons/bindings/hue/):
+
+* Open a web browser and from the openHAB dashboard select **Paper UI**.
+* From the menu on the left in **Paper UI** select **Add-ons**.
+* Click the **Bindings** tab.
+* Search for **hue Binding**
+* Click **INSTALL** and wait until **hue Binding** installs.
+* From the menu on the left in **Paper UI** select **Inbox**.
+* Add **Hue Bridge** as **thing**.
+* From the menu on the left select **Configurations > Things**.
+* Create a new Item name it **LIGHT ON** with **Switch** type
 
 ## Rules
 
@@ -287,15 +297,8 @@ Follow the steps below to enable rules in **Paper UI** of **openHAB2**:
 Follow the steps below to create a rule that turns on the lights when key A on the keyboard is pressed:
 
 * From the menu on the left in **Paper UI** go to **Rules**, click the + icon and select **New rule**.
-* For **when** select **an item state changes**, for **item** select the linked key event, for state type in **KEY_A**.
-* For **then** select **send a command**, for **item** select the linked IKEA TRÅDFRI lightning bulb brightness, for **Command** select **ON**.
-* Verify that the IKEA TRÅDFRI lightning bulb turns on by pressing key A on the keyboard.
+* For **when** select **an item state changes**, for **item** select the linked key event(e.g. ANY_KEY that is you have created in previous steps), for state type in **KEY_1**. (This key must be matched with the key configured in the Remodo X remote)
+* For **then** select **send a command**, for **item** select the linked Light_ON (This item should be the one you have created in the previous step when setup Philips Hue Light), for **Command** select **ON**. Then, click **OK** to confirm you modification.
+* Verify that the Philips Hue lightning bulb turns on by pressing key 1 on the Remodo X.
 
-#### Create a rule to turn off lights
 
-Follow the steps below to create a rule that turns off the lights when key S on the keyboard is pressed:
-
-* From the menu on the left in **Paper UI** go to **Rules**, click the + icon and select **New rule**.
-* For **when** select **an item state changes**, for **item** select the linked key event, for state type in **KEY_S**.
-* For **then** select **send a command**, for **item** select the linked IKEA TRÅDFRI lightning bulb brightness, for **Command** select **OFF**.
-* Verify that the IKEA TRÅDFRI lightning bulb turns off by pressing key S on the keyboard.

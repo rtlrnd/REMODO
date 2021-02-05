@@ -62,9 +62,9 @@ Follow the steps below to install [TED plugin](https://kodi.wiki/view/Add-on:TED
 
 Home Assistant is an open source automation software for smart home. This chapter explains how to:
 * Install Home Assistant on Raspberry Pi 4
-* Configure IKEA TRÅDFRI integration in Home Assistant
+* Configure Philips Hue Light in Home Assistant
 * Configure keyboard remote integration in Home Assistant
-* Create a rule to use a keyboard to control IKEA TRÅDFRI lightning bulb through Home Assistant
+* Create a rule to use a keyboard to control Philips Hue lightning bulb through Home Assistant
 
 ## Required Hardware
 
@@ -74,95 +74,144 @@ The following hardware is required:
 * microSD card (recommended class 10, 16GB or more)
 * HDMI monitor with appropriate cable
 * Ethernet cable to connect Raspberry Pi to the LAN and the Internet
-* IKEA TRÅDFRI Gateway
-* IKEA TRÅDFRI lightning bulb
-* Smartphone (Android or iOS) with installed and configured IKEA TRÅDFRI mobile application
+* Philips Hue Bridge
+* Philips Hue White ambiance 
+* Smartphone (Android or iOS) with installed and configured "Philips Hue App" mobile application
 
 ## Home Assistant Installation
 
 Follow the steps below to install Home Assistant on Raspberry Pi 4:
-* Download and extract [Home Assistant 32-bit image for your Raspberry Pi 4](https://www.home-assistant.io/hassio/installation/).
-* Using balenaEtcher write the image to a microSD card.
-* Connect keyboard, HDMI monitor and Ethernet cable for Internet connectivity to the Raspberry Pi. Plug the microSD card and turn on the Raspberry Pi 4 by inserting the USB C cable. Wait until the system boots. The initial boot will perform some Home Assistant installation steps that can take 20 minutes or more.
+* [Manual installation on a Raspberry Pi](https://www.home-assistant.io/docs/installation/raspberry-pi/).
+
+* Open a terminal and execute hass command to start Home Assistant
+```
+hass
+```
+
 * Open a web browser and access http://homeassistant.local:8123/ If mDNS is not working replace `homeassistant.local` with the actual IP of the Raspberry Pi in your LAN.
 
-## IKEA TRÅDFRI Integration in Home Assistant
 
-Follow the steps below to integrate IKEA TRÅDFRI in Home Assistant:
 
-* From the menu of the left go to **Configuration**
-* Select **Integrations**.
-* Click the plus button (from the lower right corner) and add seach for IKEA TRÅDFRI.
-* Enter IP address of the IKEA TRÅDFRI Gateway for **Host**
-* Enter security code from the back of the IKEA TRÅDFRI Gateway
-* Click **SUBMIT**
-* Home Assistant will automatically detect your IKEA TRÅDFRI devices, click **FINISH**.
-* From the menu of the left go to **Overview** and verify that the IKEA TRÅDFRI lightning bulb appears.
 
-For more details have a look [at this video tutorial](https://www.youtube.com/watch?v=nk1ohSIB75Q).
 
-## Keyboard Remote Integration in Home Assistant
 
-* Go to the user profile (in the menu the lower left corner) and **Enable Advanced Mode**.
-* From the menu of the left go to **Supervisor**
-* Click on tab **Add-on store**
-* Search for **File Editor** and click **Install**
-* After successful installation of **File Editor** click **Start** and after that click **Open Web UI**.
-* Click **Browse Filesystem** (the button with folder icon in the upper left corner of File Editor)
-* Select `/config/configuration.yam`
-* Add the following lines to the end of `/config/configuration.yaml` and save it:
+
+## Connect Remodo_X to HomeAssistant
+
+* Open a terminal and execute the following commands 
+```
+sudo bluetoothctl
+```
+
+* type **agent on** and press enter.
+```
+agent on
+```
+
+* Press and hold the III and IV keys at the same time on the Remodo X remote until it beeps. The GREEN LED should be flashing.
+* Type **scan on** and press enter. 
+```
+scan on
+```
+
+The unique addresses of all the Bluetooth devices around the Raspberry Pi will appear and look something like **Remodo_X_xxxxxx**. 
+* To pair the device, type pair [device mac address]. It should be like this, pair XX:XX:XX:XX:XX:XX 
+```
+pair 85:80:00:00:00:01
+```
+* Then, type connect XX:XX:XX:XX:XX:XX (the mac address you have paired in the previous step)
+```
+connect 85:80:00:00:00:01
+```
+* Then, you can exit the bluetoothctl process
+```
+exit
+```
+* Check the remodo x has successfully conencted or not, check device descriptor by this command, normally it is **event3**
+```
+ls /dev/input/
+```
+
+
+## Remodo X Integration in Home Assistant
+
+* Go the path as below and edit the file configuration.yaml
+
+`/home/pi/homeassistant/configuration.yaml`
+
+* Add the following lines to the end of configuration.yaml and save it:
 ```
 keyboard_remote:
-- device_descriptor: '/dev/input/event0'
-  type: 'key_up'
+    device_descriptor: '/dev/input/event3'
+    type: 
+    -   'key_up'
+    -   'key_down'
 ```
 * From the menu of the left go to **Configuration**
 * Select **Server Controls**
 * Click **CHECK CONFIGURATION**
-* Verify that message **Configuration valid!** is shown. Otherwise go back to the previous steps to check the content of `/config/configuration.yaml`.
+* Verify that message **Configuration valid!** is shown. Otherwise go back to the previous steps to check the content of `/home/pi/homeassistant/configuration.yaml`.
 * From **Server management** click **RESTART** and wait until Home Assistant restarts
 
 **Note:** After enabling **Keyboard Remote** integration you can **not** use your keyboard for typing in the command-prompt because **Home Assistant** intercepts it and evdev will block it.
 
 ### Troubleshooting
 
-To verify that the Keyboard Remote integration in Home Assistant is successful select **Developer tools** and click **EVENTS**. In **Listen to events** set `keyboard_remote_command_received` and subscribe. Press keys and observe the detected events to find out key codes. If event is not detected double check `/config/configuration.yaml`
+To verify that the Keyboard Remote integration in Home Assistant is successful select **Developer tools** and click **EVENTS**. In **Listen to events** set `keyboard_remote_command_received` and subscribe. Press keys and observe the detected events to find out key codes. If event is not detected double check `/home/pi/homeassistant/configuration.yaml`
+
+
+## Philips Hue Integration in Home Assistant
+
+Follow the steps below to integrate Philips Hue in Home Assistant:
+
+For more information about Philips Hue Integration 
+(https://www.home-assistant.io/integrations/hue/):
+
+* From the menu of the left go to **Configuration**
+* Select **Integrations**.
+* Click the plus button (from the lower right corner) and add search for Philips Hue
+* Follow the instruction with Home Assistant to Link the Hub with Home Assistant. Press the "Button" on the bridge to register Philips Hue with Home Assistant
+* Home Assistant will automatically detect your Philips Hue devices
+* From the menu of "Configuration > Integrations > Configured > ", click on "Philips Hue: Philips Hue NT", and you can see Philips Hue devices appears.
+
 
 ## Home Assistant Automations
 
-* From the menu on the left go to **Supervisor** and select **File Editor**
-* Click **Open Web UI**.
-* Click **Browse Filesystem** (the button with folder icon in the upper left corner of File Editor)
-* Select `/config/automations.yaml` and save it as:
+* Go the path as below and edit the file configuration.yaml
+
+`/home/pi/homeassistant/configuration.yaml`
+
+
 ```
-- alias: turn on lights
-  trigger:
-    platform: event
-    event_type: keyboard_remote_command_received
-    event_data:
-      device_descriptor: "/dev/input/event0"
-      key_code: 30
-  action:
-    service: light.turn_on
-    entity_id: light.tradfri_bulb_7
-- alias: turn off lights
-  trigger:
-    platform: event
-    event_type: keyboard_remote_command_received
-    event_data:
-      device_descriptor: "/dev/input/event0"
-      key_code: 31
-  action:
-    service: light.turn_off
-    entity_id: light.tradfri_bulb_7
+automation:
+    - alias: "turn on lights"
+    trigger:
+        platform: event
+        event_type: keyboard_remote_command_received
+        event_data:
+            device_descriptor: "/dev/input/event3"
+            key_code: 2
+        action:
+            service: light.turn_on
+            entity_id: light.hue_color_lamp
+    - alias: turn off lights
+    trigger:
+        platform: event
+        event_type: keyboard_remote_command_received
+        event_data:
+            device_descriptor: "/dev/input/event3"
+            key_code: 3
+        action:
+            service: light.turn_off
+            entity_id: light.hue_color_lamp
 ```
 
-**NOTE:** You need to replace `light.tradfri_bulb_7` with the actual entity id of the IKEA TRÅDFRI lightning bulb! The keyboard device descriptor might be different from `/dev/input/event0` if several keyboards are connected.
+**NOTE:** You need to replace `light.hue_color_lamp` with the actual entity id of the Philips Hue lightning bulb! The keyboard device descriptor might be different from `/dev/input/event3` if several keyboards are connected.
 
 * From the menu of the left go to **Configuration**
 * Select **Server Controls**
 * Click **CHECK CONFIGURATION**
-* Verify that message **Configuration valid!** is shown. Otherwise go back to the previous steps to check the content of `/config/automations.yaml`.
+* Verify that message **Configuration valid!** is shown. Otherwise go back to the previous steps to check the content of `/home/pi/homeassistant/configuration.yaml`.
 * From **Server management** click **RESTART** and wait until Home Assistant restarts
 * Verify that IKEA TRÅDFRI lightning bulb turns on when key A is pressed and turns off when key S is pressed.
 
@@ -300,5 +349,3 @@ Follow the steps below to create a rule that turns on the lights when key A on t
 * For **when** select **an item state changes**, for **item** select the linked key event(e.g. ANY_KEY that is you have created in previous steps), for state type in **KEY_1**. (This key must be matched with the key configured in the Remodo X remote)
 * For **then** select **send a command**, for **item** select the linked Light_ON (This item should be the one you have created in the previous step when setup Philips Hue Light), for **Command** select **ON**. Then, click **OK** to confirm you modification.
 * Verify that the Philips Hue lightning bulb turns on by pressing key 1 on the Remodo X.
-
-

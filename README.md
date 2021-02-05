@@ -213,7 +213,7 @@ automation:
 * Click **CHECK CONFIGURATION**
 * Verify that message **Configuration valid!** is shown. Otherwise go back to the previous steps to check the content of `/home/pi/homeassistant/configuration.yaml`.
 * From **Server management** click **RESTART** and wait until Home Assistant restarts
-* Verify that IKEA TRÅDFRI lightning bulb turns on when key A is pressed and turns off when key S is pressed.
+* Verify that Philips Hue lightning bulb turns on when key 1 is pressed and turns off when key 2 is pressed.
 
 # OpenHAB
 
@@ -349,3 +349,5 @@ Follow the steps below to create a rule that turns on the lights when key A on t
 * For **when** select **an item state changes**, for **item** select the linked key event(e.g. ANY_KEY that is you have created in previous steps), for state type in **KEY_1**. (This key must be matched with the key configured in the Remodo X remote)
 * For **then** select **send a command**, for **item** select the linked Light_ON (This item should be the one you have created in the previous step when setup Philips Hue Light), for **Command** select **ON**. Then, click **OK** to confirm you modification.
 * Verify that the Philips Hue lightning bulb turns on by pressing key 1 on the Remodo X.
+
+
